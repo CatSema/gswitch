@@ -4,3 +4,5 @@ Sun Sep  6 18:09:47 MSK 2026 - arumata@gmail.com
 - Initial experimental gswitch 0.8.0 package for openSUSE Tumbleweed x86_64.
 - Build from source with vendored Go dependencies.
 - Include the systemd user service, udev rules, and GTK tray.
+- Automatically select the newest reachable upstream release tag and derive the package version from it.
+- Use a version-neutral vendor archive name.

@@ -1,4 +1,3 @@
-%global source_commit 9058e19e109507b1db0d85217cb6a7fa5dc9b3a1
 # Go release binaries are stripped explicitly; do not create empty debugsource RPMs.
 %global debug_package %{nil}
 Name:           gswitch
@@ -7,9 +6,9 @@ Release:        0
 Summary:        Keyboard layout correction on explicit request
 License:        MIT
 URL:            https://github.com/arumata/gswitch
-# Generated from the pinned public commit by _service (tar_scm and go_modules).
+# Generated from the newest reachable public release tag by _service.
 Source0:        gswitch-%{version}.tar.gz
-Source1:        gswitch-%{version}-vendor.tar.gz
+Source1:        vendor.tar.gz
 BuildRequires:  golang(API) >= 1.25
 BuildRequires:  gcc
 BuildRequires:  pkgconfig
