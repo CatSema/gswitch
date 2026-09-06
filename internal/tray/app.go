@@ -45,6 +45,11 @@ func New() *App {
 // Run starts the application main loop.
 // It sets up signal handlers and runs the selected tray backend.
 func (a *App) Run() error {
+	prefs, prefsErr := LoadUIPreferences()
+	if prefsErr != nil {
+		fmt.Printf("Warning: interface preferences: %v\n", prefsErr)
+	}
+	selectInterfaceLanguage(prefs.Language)
 	// Setup signal handling for graceful shutdown
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
@@ -204,6 +209,20 @@ func (a *App) OnSettingsClicked() {
 		a.mu.Lock()
 		settingsWindow := a.settingsWindow
 		a.mu.Unlock()
+		if settingsWindow != nil && settingsWindow.languageCode != currentLanguage().Code() {
+			replacement, err := newSettingsWindow(a)
+			if err != nil {
+				settingsWindow.showErrorDialog(tr(strErrorTitle), err.Error())
+				return
+			}
+			if settingsWindow.window != nil {
+				settingsWindow.window.Destroy()
+			}
+			settingsWindow = replacement
+			a.mu.Lock()
+			a.settingsWindow = replacement
+			a.mu.Unlock()
+		}
 		if settingsWindow != nil {
 			// Show() will focus the window if already visible, or show it if hidden
 			settingsWindow.Show()
@@ -315,11 +334,11 @@ func (a *App) showFirstRunDialogIfNeeded(info DetectionInfo) {
 			gtk.MESSAGE_INFO,
 			gtk.BUTTONS_NONE,
 			"%s",
-			strFirstRunTitle,
+			tr(strFirstRunTitle),
 		)
-		dialog.FormatSecondaryText("%s", strFirstRunMessage)
-		_, _ = dialog.AddButton(strFirstRunConfig, gtk.RESPONSE_OK)
-		_, _ = dialog.AddButton(strFirstRunDismiss, gtk.RESPONSE_CANCEL)
+		dialog.FormatSecondaryText("%s", tr(strFirstRunMessage))
+		_, _ = dialog.AddButton(tr(strFirstRunConfig), gtk.RESPONSE_OK)
+		_, _ = dialog.AddButton(tr(strFirstRunDismiss), gtk.RESPONSE_CANCEL)
 
 		response := dialog.Run()
 		dialog.Destroy()

@@ -282,3 +282,11 @@ func goXEmbedMenuActivated(backendHandle C.uintptr_t, itemID C.int) {
 	default:
 	}
 }
+
+func (m *xembedMenuItem) SetTooltip(text string) {
+	m.backend.scheduleMenuItemUpdate(m.native, func(item *C.GtkWidget) {
+		value := C.CString(text)
+		defer C.gswitch_xembed_free_string(value)
+		C.gswitch_xembed_menu_item_set_tooltip(item, value)
+	})
+}

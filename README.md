@@ -58,6 +58,9 @@ without browser extensions, editor plugins, or toolkit-specific integration.
   layout flag, the application icon, or both. It also shows status, edits
   settings, controls the user service, and offers Pause/Break and Scroll Lock
   presets or another single correction key.
+- **Interface in 11 languages.** Follow the system language or choose English,
+  Russian, German, French, Spanish, Ukrainian, Polish, Portuguese, Italian,
+  Belarusian, or Kazakh in Settings. Translations are built into the application.
 
 ## How It Works
 
@@ -211,7 +214,7 @@ on KDE, GNOME with an AppIndicator extension, and other SNI hosts; XEmbed on
 X11 desktops such as Awesome 4.3. StatusNotifierItem is preferred when both
 hosts are available.
 
-The **Tray** section in Settings controls the normal icon:
+The **Interface** section in Settings controls the normal icon:
 
 - **Flag** shows the active layout and is the default.
 - **Application icon with flag** adds the active layout flag to the application
@@ -219,11 +222,58 @@ The **Tray** section in Settings controls the normal icon:
 - **Application icon** always shows the application icon.
 
 The choice takes effect immediately and is saved per user in
-`~/.config/gswitch/tray.conf`. It does not restart the daemon or change
+`~/.config/gswitch/ui.conf`. It does not restart the daemon or change
 `/etc/gswitch/default.conf`. Warning and error icons temporarily replace the
-normal icon until the tray returns to an OK status.
+normal icon until the tray returns to an OK status. Belarusian and Kazakh
+layout flags are available too.
 
-<img src="assets/tray-settings.png" width="400" alt="gswitch settings with US and Spanish layouts">
+<img src="assets/tray-settings.png" width="400" alt="gswitch v0.8.0 settings with interface language selection and US/Spanish layouts">
+
+
+Click the **ⓘ** button next to **Text conversion** to see the shortcuts for
+correcting the last word or whole line, converting selected text, changing
+case, and undoing a correction. The explanation follows the selected
+conversion key and modifier preset.
+
+<img src="assets/tray-shortcuts.png" width="400" alt="Shortcut explanation opened with the info button, showing Double Shift for the last word and Shift plus double the other Shift for the whole line">
+
+#### Interface language
+
+In **Settings → Interface**, choose **System language** or one of the 11
+available languages, then click **Apply**. The tray menu updates immediately;
+the settings window uses the selected language the next time you open it.
+Changing only the language or icon does not restart the daemon or require an
+administrator password.
+
+| Language | Code |
+|---|---|
+| English | `en` |
+| Русский | `ru` |
+| Deutsch | `de` |
+| Français | `fr` |
+| Español | `es` |
+| Українська | `uk` |
+| Polski | `pl` |
+| Português | `pt` |
+| Italiano | `it` |
+| Беларуская | `be` |
+| Қазақша | `kk` |
+
+Interface language is independent of the keyboard layout pair being corrected.
+The launcher is named **gswitch**
+in every locale.
+
+The preference is saved as `ui-language=auto` or the chosen language code in
+`$XDG_CONFIG_HOME/gswitch/ui.conf` (usually `~/.config/gswitch/ui.conf`), alongside
+`tray-icon-mode`. When upgrading, gswitch migrates the old `tray.conf` if
+`ui.conf` does not exist and removes the old file after a successful transfer.
+An existing `ui.conf` takes precedence; the legacy file is removed after
+`ui.conf` is read successfully. If migration fails, the old file is preserved.
+
+System language selection uses `LC_ALL`, `LC_MESSAGES`, `LANG`, and the
+`LANGUAGE` preference list. If no matching translation is available, the
+interface falls back to English. Translations are embedded in the binary;
+adding a catalog under `internal/i18n/locales/` requires a new build.
 
 #### Running without a tray host
 

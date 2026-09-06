@@ -5,6 +5,7 @@ const trayApplicationID = "gswitch"
 type trayMenuItem interface {
 	Clicks() <-chan struct{}
 	SetTitle(string)
+	SetTooltip(string)
 	Enable()
 	Disable()
 }

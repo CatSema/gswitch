@@ -3,7 +3,7 @@ package assets
 
 import "embed"
 
-//go:embed flags/*.png
+//go:embed flags/*.png flags/LICENSE
 var FlagsFS embed.FS
 
 //go:embed gswitch.png

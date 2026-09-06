@@ -2,6 +2,7 @@ package tray
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -23,12 +24,13 @@ const (
 
 // DetectionInfo contains information about the detection status.
 type DetectionInfo struct {
-	Status   TrayStatus
-	Source   string   // "xkb", "gnome", etc.
-	KeyNames string   // "Alt+Shift", "Super+Space", etc.
-	Error    string   // Error message if any
-	Warning  string   // Warning message if any
-	Attempts []string // Provider attempts for diagnostics
+	Status         TrayStatus
+	Source         string   // "xkb", "gnome", etc.
+	KeyNames       string   // "Alt+Shift", "Super+Space", etc.
+	Error          string   // Error message if any
+	ErrorMessageID string   // Own status messages are translated at display time.
+	Warning        string   // Warning message if any
+	Attempts       []string // Provider attempts for diagnostics
 }
 
 // detectJSONOutput mirrors the JSON structure from gswitch --detect-layout-switch.
@@ -79,9 +81,11 @@ func CheckDetectionStatus(sm *ServiceManager) DetectionInfo {
 			info.Status = TrayStatusServiceError
 			switch status {
 			case StatusFailed:
-				info.Error = strTooltipServiceFailed
+				info.ErrorMessageID = strTooltipServiceFailed
+				info.Error = tr(strTooltipServiceFailed)
 			case StatusStopped:
-				info.Error = strTooltipServiceStopped // "service is not running" for a clear tooltip
+				info.ErrorMessageID = strTooltipServiceStopped
+				info.Error = tr(strTooltipServiceStopped) // "service is not running" for a clear tooltip
 			}
 			return info
 		}
@@ -108,7 +112,8 @@ func runDetection() DetectionInfo {
 	gswitchPath, findErr := findGswitchBinary()
 	if findErr != nil {
 		info.Status = TrayStatusDetectError
-		info.Error = "gswitch not found"
+		info.ErrorMessageID = strGswitchMissing
+		info.Error = tr(strGswitchMissing)
 		return info
 	}
 
@@ -156,13 +161,13 @@ func runDetection() DetectionInfo {
 // formatDetectionError formats an error from running gswitch CLI into a user-friendly message.
 func formatDetectionError(err error) string {
 	if err == nil {
-		return "failed to parse gswitch response"
+		return tr(strResponseInvalid)
 	}
 	// Check if binary not found
 	if os.IsNotExist(err) || strings.Contains(err.Error(), "executable file not found") {
-		return "gswitch not found"
+		return tr(strGswitchMissing)
 	}
-	return "failed to run gswitch: " + err.Error()
+	return fmt.Sprintf(tr(strGswitchRunFailed), err.Error())
 }
 
 // desktopIsGNOME checks if the current desktop environment is GNOME.
@@ -196,4 +201,11 @@ func containsIgnoreCase(s, substr string) bool {
 func systemctlAvailable() bool {
 	_, err := exec.LookPath("systemctl")
 	return err == nil
+}
+
+func (info DetectionInfo) errorText() string {
+	if info.ErrorMessageID != "" {
+		return tr(info.ErrorMessageID)
+	}
+	return info.Error
 }

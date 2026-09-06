@@ -107,16 +107,16 @@ func (t *Tray) onReady() {
 	t.setInitialAppearance()
 
 	// Create service status menu items
-	t.mServiceStatus = t.backend.AddMenuItem(strTrayServiceUnknown, "Service status")
+	t.mServiceStatus = t.backend.AddMenuItem(tr(strTrayServiceUnknown), tr(strMenuServiceHint))
 	t.mServiceStatus.Disable() // Status is display-only
-	t.mServiceAction = t.backend.AddMenuItem(strButtonStop, "Stop/Start service")
+	t.mServiceAction = t.backend.AddMenuItem(tr(strButtonStop), tr(strMenuActionHint))
 	t.backend.AddSeparator()
 
 	// Create menu items
-	t.mRefresh = t.backend.AddMenuItem(strTrayRefresh, "Refresh detection status")
-	t.mSettings = t.backend.AddMenuItem("Settings...", "Open settings")
+	t.mRefresh = t.backend.AddMenuItem(tr(strTrayRefresh), tr(strMenuRefreshHint))
+	t.mSettings = t.backend.AddMenuItem(tr(strMenuSettings), tr(strMenuSettingsHint))
 	t.backend.AddSeparator()
-	t.mQuit = t.backend.AddMenuItem("Quit", "Close application")
+	t.mQuit = t.backend.AddMenuItem(tr(strMenuQuit), tr(strMenuQuitHint))
 
 	// Handle menu clicks and queued UI updates in a single goroutine.
 	go t.handleEvents()
@@ -138,7 +138,7 @@ func (t *Tray) setInitialAppearance() {
 	// The StatusNotifier backend copies the initial title into its immutable Id.
 	t.backend.SetIcon(GetNormalIcon(TrayIconModeApp, ""))
 	t.backend.SetTitle(trayApplicationID)
-	t.backend.SetTooltip("gswitch " + appVersion + " - Layout switcher")
+	t.backend.SetTooltip(fmt.Sprintf(tr(strAppTooltip), appVersion))
 }
 
 // onExit is called when the selected tray backend is exiting.
@@ -311,24 +311,24 @@ func (t *Tray) applyServiceStatus(status ServiceStatus) {
 	// Update status label and service action button.
 	switch status {
 	case StatusRunning:
-		t.mServiceStatus.SetTitle(strTrayServiceRunning)
-		t.mServiceAction.SetTitle(strButtonStop)
+		t.mServiceStatus.SetTitle(tr(strTrayServiceRunning))
+		t.mServiceAction.SetTitle(tr(strButtonStop))
 		t.mServiceAction.Enable()
 	case StatusStopped:
-		t.mServiceStatus.SetTitle(strTrayServiceStopped)
-		t.mServiceAction.SetTitle(strButtonStart)
+		t.mServiceStatus.SetTitle(tr(strTrayServiceStopped))
+		t.mServiceAction.SetTitle(tr(strButtonStart))
 		t.mServiceAction.Enable()
 	case StatusFailed:
-		t.mServiceStatus.SetTitle(strTrayServiceFailed)
-		t.mServiceAction.SetTitle(strButtonStart)
+		t.mServiceStatus.SetTitle(tr(strTrayServiceFailed))
+		t.mServiceAction.SetTitle(tr(strButtonStart))
 		t.mServiceAction.Enable()
 	case StatusNotInstalled:
-		t.mServiceStatus.SetTitle(strTrayServiceNotInstalled)
-		t.mServiceAction.SetTitle(strButtonStart)
+		t.mServiceStatus.SetTitle(tr(strTrayServiceNotInstalled))
+		t.mServiceAction.SetTitle(tr(strButtonStart))
 		t.mServiceAction.Disable() // Cannot start a non-installed service
 	default:
-		t.mServiceStatus.SetTitle(strTrayServiceUnknown)
-		t.mServiceAction.SetTitle(strButtonStart)
+		t.mServiceStatus.SetTitle(tr(strTrayServiceUnknown))
+		t.mServiceAction.SetTitle(tr(strButtonStart))
 		t.mServiceAction.Disable()
 	}
 }
@@ -388,7 +388,7 @@ func (t *Tray) applyLayout(layout LayoutInfo) {
 	t.backend.SetIcon(t.normalIcon())
 
 	// Build tooltip: layout info + detection keybinding (if available)
-	tooltip := layout.ShortCode + " - " + layout.LongName
+	tooltip := layout.ShortCode + " - " + localizedLayoutName(layout.LongName)
 	if t.detectionInfo.KeyNames != "" {
 		tooltip += "\n" + t.detectionInfo.KeyNames
 		if t.detectionInfo.Source != "" {
@@ -437,7 +437,7 @@ func (t *Tray) applyDetectionStatus(info DetectionInfo) {
 		t.currentCode = ""
 		switch {
 		case info.KeyNames != "" && info.Source != "":
-			tooltip := fmt.Sprintf(strTooltipOK, info.KeyNames, info.Source)
+			tooltip := fmt.Sprintf(tr(strTooltipOK), info.KeyNames, info.Source)
 			t.backend.SetTitle(tooltip) // KDE shows Title as tooltip
 			t.backend.SetTooltip(tooltip)
 		case info.KeyNames != "":
@@ -446,37 +446,37 @@ func (t *Tray) applyDetectionStatus(info DetectionInfo) {
 			t.backend.SetTooltip(tooltip)
 		default:
 			t.backend.SetTitle("gswitch")
-			t.backend.SetTooltip("gswitch " + appVersion + " - Layout switcher")
+			t.backend.SetTooltip(fmt.Sprintf(tr(strAppTooltip), appVersion))
 		}
 
 	case TrayStatusNeedsConfig:
 		// Warning - show yellow icon
 		t.backend.SetIcon(GetWarningIcon())
-		t.backend.SetTitle(strTooltipNeedsConfig)
-		t.backend.SetTooltip(strTooltipNeedsConfig + "\n" + strTooltipClickConfig)
+		t.backend.SetTitle(tr(strTooltipNeedsConfig))
+		t.backend.SetTooltip(tr(strTooltipNeedsConfig) + "\n" + tr(strTooltipClickConfig))
 
 	case TrayStatusServiceError:
 		// Service error - show red icon
 		t.backend.SetIcon(GetErrorIcon())
 		if info.Error != "" {
-			tooltip := "gswitch: " + info.Error
+			tooltip := "gswitch: " + info.errorText()
 			t.backend.SetTitle(tooltip)
 			t.backend.SetTooltip(tooltip)
 		} else {
-			t.backend.SetTitle(strTooltipServiceError)
-			t.backend.SetTooltip(strTooltipServiceError)
+			t.backend.SetTitle(tr(strTooltipServiceError))
+			t.backend.SetTooltip(tr(strTooltipServiceError))
 		}
 
 	case TrayStatusDetectError:
 		// Detection error - show red icon
 		t.backend.SetIcon(GetErrorIcon())
 		if info.Error != "" {
-			tooltip := "gswitch: " + info.Error
+			tooltip := "gswitch: " + info.errorText()
 			t.backend.SetTitle(tooltip)
 			t.backend.SetTooltip(tooltip)
 		} else {
-			t.backend.SetTitle(strTooltipDetectError)
-			t.backend.SetTooltip(strTooltipDetectError)
+			t.backend.SetTitle(tr(strTooltipDetectError))
+			t.backend.SetTooltip(tr(strTooltipDetectError))
 		}
 	}
 }

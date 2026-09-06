@@ -16,8 +16,10 @@ import (
 
 // SettingsWindow represents the settings dialog.
 type SettingsWindow struct {
-	window *gtk.Window
-	app    *App
+	window        *gtk.Window
+	app           *App
+	languageCode  string
+	languageCombo *gtk.ComboBoxText
 
 	// Service manager
 	serviceManager *ServiceManager
@@ -104,7 +106,9 @@ func (w *SettingsWindow) build() error {
 		return fmt.Errorf("failed to create window: %w", err)
 	}
 
-	w.window.SetTitle(strWindowTitle)
+	w.languageCode = currentLanguage().Code()
+	w.window.SetTitle(tr(strWindowTitle))
+	setInterfaceDirection()
 	w.window.SetDefaultSize(500, 700)
 	w.window.SetPosition(gtk.WIN_POS_CENTER)
 	w.window.SetResizable(true)
@@ -198,7 +202,7 @@ func (w *SettingsWindow) build() error {
 
 // createServiceSection creates the "Service" section.
 func (w *SettingsWindow) createServiceSection() (*gtk.Frame, error) {
-	frame, err := gtk.FrameNew(strSectionService)
+	frame, err := gtk.FrameNew(tr(strSectionService))
 	if err != nil {
 		return nil, err
 	}
@@ -215,23 +219,23 @@ func (w *SettingsWindow) createServiceSection() (*gtk.Frame, error) {
 	grid.SetMarginEnd(10)
 
 	// Row 0: Status label + value + restart button
-	statusLabel, err := gtk.LabelNew(strLabelStatus)
+	statusLabel, err := gtk.LabelNew(tr(strLabelStatus))
 	if err != nil {
 		return nil, err
 	}
 	statusLabel.SetHAlign(gtk.ALIGN_START)
 	grid.Attach(statusLabel, 0, 0, 1, 1)
 
-	w.statusLabel, err = gtk.LabelNew(strStatusUnknown)
+	w.statusLabel, err = gtk.LabelNew(tr(strStatusUnknown))
 	if err != nil {
 		return nil, err
 	}
 	w.statusLabel.SetHAlign(gtk.ALIGN_START)
 	// Add colored bullet (placeholder - will be updated in task 05)
-	w.statusLabel.SetMarkup("<span foreground='gray'>\u25CF</span> " + strStatusUnknown)
+	w.statusLabel.SetMarkup("<span foreground='gray'>\u25CF</span> " + tr(strStatusUnknown))
 	grid.Attach(w.statusLabel, 1, 0, 1, 1)
 
-	w.restartButton, err = gtk.ButtonNewWithLabel(strButtonRestart)
+	w.restartButton, err = gtk.ButtonNewWithLabel(tr(strButtonRestart))
 	if err != nil {
 		return nil, err
 	}
@@ -239,7 +243,7 @@ func (w *SettingsWindow) createServiceSection() (*gtk.Frame, error) {
 	grid.Attach(w.restartButton, 2, 0, 1, 1)
 
 	// Row 1: Autostart checkbox
-	w.autostartCheck, err = gtk.CheckButtonNewWithLabel(strCheckAutostart)
+	w.autostartCheck, err = gtk.CheckButtonNewWithLabel(tr(strCheckAutostart))
 	if err != nil {
 		return nil, err
 	}
@@ -252,7 +256,7 @@ func (w *SettingsWindow) createServiceSection() (*gtk.Frame, error) {
 
 // createKeysSection creates the "Keys" section.
 func (w *SettingsWindow) createKeysSection() (*gtk.Frame, error) {
-	frame, err := gtk.FrameNew(strSectionKeys)
+	frame, err := gtk.FrameNew(tr(strSectionKeys))
 	if err != nil {
 		return nil, err
 	}
@@ -269,7 +273,7 @@ func (w *SettingsWindow) createKeysSection() (*gtk.Frame, error) {
 	grid.SetMarginEnd(10)
 
 	// Row 0: Layout switch combo
-	layoutSwitchLabel, err := gtk.LabelNew(strLabelLayoutSwitch)
+	layoutSwitchLabel, err := gtk.LabelNew(tr(strLabelLayoutSwitch))
 	if err != nil {
 		return nil, err
 	}
@@ -281,7 +285,7 @@ func (w *SettingsWindow) createKeysSection() (*gtk.Frame, error) {
 		return nil, err
 	}
 	for _, opt := range layoutSwitchOptions {
-		w.layoutSwitchCombo.AppendText(opt.Label)
+		w.layoutSwitchCombo.AppendText(tr(opt.Label))
 	}
 	w.layoutSwitchCombo.SetActive(0)
 	w.layoutSwitchCombo.SetHExpand(true)
@@ -294,7 +298,7 @@ func (w *SettingsWindow) createKeysSection() (*gtk.Frame, error) {
 		return nil, err
 	}
 	layoutSwitchHint.SetUseMarkup(true)
-	layoutSwitchHintText := glib.MarkupEscapeText(strLayoutSwitchHint)
+	layoutSwitchHintText := glib.MarkupEscapeText(tr(strLayoutSwitchHint))
 	layoutSwitchHint.SetMarkup("<small><span foreground='gray'>" + layoutSwitchHintText + "</span></small>")
 	layoutSwitchHint.SetLineWrap(true)
 	layoutSwitchHint.SetHAlign(gtk.ALIGN_START)
@@ -313,7 +317,7 @@ func (w *SettingsWindow) createKeysSection() (*gtk.Frame, error) {
 	grid.Attach(w.layoutSwitchStatus, 0, 2, 2, 1)
 
 	// Row 3: Convert key combo
-	convertKeyLabel, err := gtk.LabelNew(strLabelConvertKey)
+	convertKeyLabel, err := gtk.LabelNew(tr(strLabelConvertKey))
 	if err != nil {
 		return nil, err
 	}
@@ -335,14 +339,14 @@ func (w *SettingsWindow) createKeysSection() (*gtk.Frame, error) {
 		return nil, err
 	}
 	for _, opt := range convertKeyOptions {
-		w.convertKeyCombo.AppendText(opt.Label)
+		w.convertKeyCombo.AppendText(tr(opt.Label))
 	}
 	w.convertKeyCombo.SetActive(0)
 	w.convertKeyCombo.SetHExpand(true)
 	w.convertKeyCombo.Connect("changed", w.onConvertKeyChanged)
 	grid.Attach(w.convertKeyCombo, 1, 3, 1, 1)
 
-	modifiersLabel, err := gtk.LabelNew(strLabelConversionModifiers)
+	modifiersLabel, err := gtk.LabelNew(tr(strLabelConversionModifiers))
 	if err != nil {
 		return nil, err
 	}
@@ -352,8 +356,8 @@ func (w *SettingsWindow) createKeysSection() (*gtk.Frame, error) {
 	if err != nil {
 		return nil, err
 	}
-	w.conversionModifiersCombo.AppendText(strConversionModifiersStandard)
-	w.conversionModifiersCombo.AppendText(strConversionModifiersPunto)
+	w.conversionModifiersCombo.AppendText(tr(strConversionModifiersStandard))
+	w.conversionModifiersCombo.AppendText(tr(strConversionModifiersPunto))
 	w.conversionModifiersCombo.SetActive(0)
 	w.conversionModifiersCombo.Connect("changed", w.onConversionPresetChanged)
 	grid.Attach(w.conversionModifiersCombo, 1, 4, 1, 1)
@@ -379,7 +383,7 @@ func (w *SettingsWindow) createKeysSection() (*gtk.Frame, error) {
 
 // createLayoutsSection creates the "Layouts" section.
 func (w *SettingsWindow) createLayoutsSection() (*gtk.Frame, error) {
-	frame, err := gtk.FrameNew(strSectionLayouts)
+	frame, err := gtk.FrameNew(tr(strSectionLayouts))
 	if err != nil {
 		return nil, err
 	}
@@ -396,7 +400,7 @@ func (w *SettingsWindow) createLayoutsSection() (*gtk.Frame, error) {
 	grid.SetMarginEnd(10)
 
 	// Row 0: Auto-detect checkbox
-	w.autoDetectCheck, err = gtk.CheckButtonNewWithLabel(strCheckAutoDetect)
+	w.autoDetectCheck, err = gtk.CheckButtonNewWithLabel(tr(strCheckAutoDetect))
 	if err != nil {
 		return nil, err
 	}
@@ -404,7 +408,7 @@ func (w *SettingsWindow) createLayoutsSection() (*gtk.Frame, error) {
 	grid.Attach(w.autoDetectCheck, 0, 0, 2, 1)
 
 	// Row 1: Layout 1 combo
-	layout1Label, err := gtk.LabelNew(strLabelLayout1)
+	layout1Label, err := gtk.LabelNew(tr(strLabelLayout1))
 	if err != nil {
 		return nil, err
 	}
@@ -423,7 +427,7 @@ func (w *SettingsWindow) createLayoutsSection() (*gtk.Frame, error) {
 	grid.Attach(w.layout1Combo, 1, 1, 1, 1)
 
 	// Row 2: Layout 2 combo
-	layout2Label, err := gtk.LabelNew(strLabelLayout2)
+	layout2Label, err := gtk.LabelNew(tr(strLabelLayout2))
 	if err != nil {
 		return nil, err
 	}
@@ -446,7 +450,7 @@ func (w *SettingsWindow) createLayoutsSection() (*gtk.Frame, error) {
 }
 
 func (w *SettingsWindow) createTraySection() (*gtk.Frame, error) {
-	frame, err := gtk.FrameNew(strSectionTray)
+	frame, err := gtk.FrameNew(tr(strSectionInterface))
 	if err != nil {
 		return nil, err
 	}
@@ -460,7 +464,7 @@ func (w *SettingsWindow) createTraySection() (*gtk.Frame, error) {
 	grid.SetMarginStart(10)
 	grid.SetMarginEnd(10)
 
-	label, err := gtk.LabelNew(strLabelTrayIcon)
+	label, err := gtk.LabelNew(tr(strLabelTrayIcon))
 	if err != nil {
 		return nil, err
 	}
@@ -472,12 +476,15 @@ func (w *SettingsWindow) createTraySection() (*gtk.Frame, error) {
 		return nil, err
 	}
 	for _, option := range trayIconModeOptions {
-		w.trayIconModeCombo.AppendText(option.Label)
+		w.trayIconModeCombo.AppendText(tr(option.Label))
 	}
 	w.trayIconModeCombo.SetActive(0)
 	w.trayIconModeCombo.SetHExpand(true)
 	grid.Attach(w.trayIconModeCombo, 1, 0, 1, 1)
 
+	if err := w.addLanguageSelector(grid); err != nil {
+		return nil, err
+	}
 	frame.Add(grid)
 	return frame, nil
 }
@@ -492,7 +499,7 @@ func newSpinButton(adjustment *gtk.Adjustment) (*gtk.SpinButton, error) {
 }
 
 func (w *SettingsWindow) createDelaysSection() (*gtk.Frame, error) {
-	frame, err := gtk.FrameNew(strSectionDelays)
+	frame, err := gtk.FrameNew(tr(strSectionDelays))
 	if err != nil {
 		return nil, err
 	}
@@ -509,7 +516,7 @@ func (w *SettingsWindow) createDelaysSection() (*gtk.Frame, error) {
 	grid.SetMarginEnd(10)
 
 	// Row 0: Delay between keys
-	delayBetweenLabel, err := gtk.LabelNew(strLabelDelayBetween)
+	delayBetweenLabel, err := gtk.LabelNew(tr(strLabelDelayBetween))
 	if err != nil {
 		return nil, err
 	}
@@ -528,7 +535,7 @@ func (w *SettingsWindow) createDelaysSection() (*gtk.Frame, error) {
 	w.delayBetweenSpin.SetNumeric(true)
 	grid.Attach(w.delayBetweenSpin, 1, 0, 1, 1)
 
-	msLabel1, err := gtk.LabelNew(strLabelMs)
+	msLabel1, err := gtk.LabelNew(tr(strLabelMs))
 	if err != nil {
 		return nil, err
 	}
@@ -536,7 +543,7 @@ func (w *SettingsWindow) createDelaysSection() (*gtk.Frame, error) {
 	grid.Attach(msLabel1, 2, 0, 1, 1)
 
 	// Row 1: Delay after switch
-	delaySwitchLabel, err := gtk.LabelNew(strLabelDelaySwitch)
+	delaySwitchLabel, err := gtk.LabelNew(tr(strLabelDelaySwitch))
 	if err != nil {
 		return nil, err
 	}
@@ -554,7 +561,7 @@ func (w *SettingsWindow) createDelaysSection() (*gtk.Frame, error) {
 	w.delaySwitchSpin.SetNumeric(true)
 	grid.Attach(w.delaySwitchSpin, 1, 1, 1, 1)
 
-	msLabel2, err := gtk.LabelNew(strLabelMs)
+	msLabel2, err := gtk.LabelNew(tr(strLabelMs))
 	if err != nil {
 		return nil, err
 	}
@@ -567,7 +574,7 @@ func (w *SettingsWindow) createDelaysSection() (*gtk.Frame, error) {
 
 // createDevicesSection creates the "Devices" section.
 func (w *SettingsWindow) createDevicesSection() (*gtk.Frame, error) {
-	frame, err := gtk.FrameNew(strSectionDevices)
+	frame, err := gtk.FrameNew(tr(strSectionDevices))
 	if err != nil {
 		return nil, err
 	}
@@ -582,7 +589,7 @@ func (w *SettingsWindow) createDevicesSection() (*gtk.Frame, error) {
 	w.devicesBox.SetMarginEnd(10)
 
 	// Initial loading label (will be replaced when window is shown)
-	loadingLabel, err := gtk.LabelNew(strDevicesLoading)
+	loadingLabel, err := gtk.LabelNew(tr(strDevicesLoading))
 	if err != nil {
 		return nil, err
 	}
@@ -611,14 +618,14 @@ func (w *SettingsWindow) createButtonBox() (*gtk.Box, error) {
 	}
 	buttonBox.PackStart(versionLabel, false, false, 0)
 
-	applyButton, err := gtk.ButtonNewWithLabel(strButtonApply)
+	applyButton, err := gtk.ButtonNewWithLabel(tr(strButtonApply))
 	if err != nil {
 		return nil, err
 	}
 	applyButton.Connect("clicked", w.onApplyClicked)
 	buttonBox.PackEnd(applyButton, false, false, 0)
 
-	cancelButton, err := gtk.ButtonNewWithLabel(strButtonCancel)
+	cancelButton, err := gtk.ButtonNewWithLabel(tr(strButtonCancel))
 	if err != nil {
 		return nil, err
 	}
@@ -633,10 +640,11 @@ func (w *SettingsWindow) Show() {
 	// Must run GTK operations on main thread
 	glib.IdleAdd(func() {
 		if w.window != nil {
+			requestTime := settingsRequestTime(w.window)
 			w.loadConfig()
 			w.updateServiceStatus()
 			w.window.ShowAll()
-			w.window.Present()
+			w.window.PresentWithTime(requestTime)
 		}
 	})
 }
@@ -654,7 +662,12 @@ func (w *SettingsWindow) loadConfig() {
 	// Set layout combos
 	w.setLayoutComboByValue(w.layout1Combo, cfg.Layout1)
 	w.setLayoutComboByValue(w.layout2Combo, cfg.Layout2)
-	w.setTrayIconMode(LoadTrayIconMode())
+	prefs, prefsErr := LoadUIPreferences()
+	w.setTrayIconMode(prefs.IconMode)
+	w.setLanguageSelection(prefs.Language)
+	if prefsErr != nil {
+		w.showErrorDialog(tr(strErrorUILoadFailed), prefsErr.Error())
+	}
 
 	// Set delay values
 	w.delayBetweenSpin.SetValue(float64(cfg.Delay))
@@ -683,7 +696,7 @@ func (w *SettingsWindow) loadKeyConfig(cfg *TrayConfig) {
 	if code, err := strconv.ParseUint(value, 10, 16); err == nil {
 		if effective := gsconfig.EffectiveConvertKey(uint16(code)); uint64(effective) != code {
 			value = strconv.FormatUint(uint64(effective), 10)
-			message = fmt.Sprintf(strConversionKeyRecovery, formatCustomKeyLabel(cfg.ConvertKey))
+			message = fmt.Sprintf(tr(strConversionKeyRecovery), formatCustomKeyLabel(cfg.ConvertKey))
 		}
 	}
 	w.setConvertKeyFromValue(value)
@@ -722,7 +735,7 @@ func (w *SettingsWindow) setTrayIconMode(mode TrayIconMode) {
 func (w *SettingsWindow) trayIconMode() (TrayIconMode, error) {
 	index := w.trayIconModeCombo.GetActive()
 	if index < 0 || index >= len(trayIconModeOptions) {
-		return DefaultTrayIconMode, errors.New("invalid tray icon selection")
+		return DefaultTrayIconMode, errors.New(tr(strInvalidTrayIcon))
 	}
 	return trayIconModeOptions[index].Value, nil
 }
@@ -743,7 +756,7 @@ func (w *SettingsWindow) loadDevices(cfg *TrayConfig) {
 		// Show appropriate error message
 		var errMsg string
 		if errors.Is(err, ErrNoAccess) {
-			errMsg = strDevicesNoAccess
+			errMsg = tr(strDevicesNoAccess)
 		} else {
 			errMsg = fmt.Sprintf("Error: %v", err)
 		}
@@ -758,7 +771,7 @@ func (w *SettingsWindow) loadDevices(cfg *TrayConfig) {
 
 	if len(keyboards) == 0 {
 		// No keyboards found
-		label, _ := gtk.LabelNew(strDevicesEmpty)
+		label, _ := gtk.LabelNew(tr(strDevicesEmpty))
 		if label != nil {
 			label.SetHAlign(gtk.ALIGN_START)
 			w.devicesBox.PackStart(label, false, false, 0)
@@ -779,7 +792,7 @@ func (w *SettingsWindow) loadDevices(cfg *TrayConfig) {
 	if activeCount == 0 {
 		warningLabel, _ := gtk.LabelNew("")
 		if warningLabel != nil {
-			warningLabel.SetMarkup("<span foreground='red'>" + strDevicesAllBlocked + "</span>")
+			warningLabel.SetMarkup("<span foreground='red'>" + tr(strDevicesAllBlocked) + "</span>")
 			warningLabel.SetHAlign(gtk.ALIGN_START)
 			w.devicesBox.PackStart(warningLabel, false, false, 0)
 		}
@@ -803,7 +816,7 @@ func (w *SettingsWindow) createDeviceCheckbox(device KeyboardDevice, isBlacklist
 	// Format label: "Device Name" or "Device Name (blocked)"
 	label := device.Name
 	if isBlacklisted {
-		label = device.Name + " " + strDeviceBlocked
+		label = device.Name + " " + tr(strDeviceBlocked)
 	}
 
 	checkbox, err := gtk.CheckButtonNewWithLabel(label)
@@ -833,7 +846,7 @@ func (w *SettingsWindow) onDeviceToggled(checkbox *gtk.CheckButton, device Keybo
 	if isActive {
 		checkbox.SetLabel(device.Name)
 	} else {
-		checkbox.SetLabel(device.Name + " " + strDeviceBlocked)
+		checkbox.SetLabel(device.Name + " " + tr(strDeviceBlocked))
 	}
 
 	// Check if all devices are now blocked
@@ -865,7 +878,7 @@ func (w *SettingsWindow) setLayoutSwitchFromValue(value string) {
 	w.customLayoutSwitch = value
 	w.layoutSwitchCombo.RemoveAll()
 	for _, opt := range layoutSwitchOptions {
-		w.layoutSwitchCombo.AppendText(opt.Label)
+		w.layoutSwitchCombo.AppendText(tr(opt.Label))
 	}
 	// Add custom entry with the value
 	customLabel := formatCustomKeyLabel(value)
@@ -887,7 +900,7 @@ func (w *SettingsWindow) setConvertKeyFromValue(value string) {
 	w.customConvertKey = value
 	w.convertKeyCombo.RemoveAll()
 	for _, opt := range convertKeyOptions {
-		w.convertKeyCombo.AppendText(opt.Label)
+		w.convertKeyCombo.AppendText(tr(opt.Label))
 	}
 	// Add custom entry with the value
 	customLabel := formatCustomKeyLabel(value)
@@ -955,7 +968,7 @@ func (w *SettingsWindow) updateDetectionStatusAsync() {
 	currentGen := w.detectionGeneration
 
 	// Show "Detecting..." message
-	w.layoutSwitchStatus.SetMarkup("<small><span foreground='gray'>" + strDetecting + "</span></small>")
+	w.layoutSwitchStatus.SetMarkup("<small><span foreground='gray'>" + tr(strDetecting) + "</span></small>")
 
 	// Run detection in goroutine
 	go func() {
@@ -1015,33 +1028,33 @@ func (w *SettingsWindow) updateStatusLabel(info DetectionInfo) {
 		if info.Warning != "" {
 			// Warning with orange color
 			escapedWarning := glib.MarkupEscapeText(info.Warning)
-			text := fmt.Sprintf(strDetectedWarning, escapedKeys, escapedSource, escapedWarning)
+			text := fmt.Sprintf(tr(strDetectedWarning), escapedKeys, escapedSource, escapedWarning)
 			markup = "<small><span foreground='#CC7000'>" + text + "</span></small>"
 		} else {
 			// Success with green color
-			text := fmt.Sprintf(strDetectedOK, escapedKeys, escapedSource)
+			text := fmt.Sprintf(tr(strDetectedOK), escapedKeys, escapedSource)
 			markup = "<small><span foreground='green'>" + text + "</span></small>"
 		}
 
 	case TrayStatusNeedsConfig:
 		// Orange "not found" message
-		markup = "<small><span foreground='#CC7000'>" + strDetectNeedsConfig + "</span></small>"
+		markup = "<small><span foreground='#CC7000'>" + tr(strDetectNeedsConfig) + "</span></small>"
 
 	case TrayStatusDetectError:
 		// Red error message with fallback for empty error
-		errText := info.Error
+		errText := info.errorText()
 		if errText == "" {
-			errText = strDetectErrorUnknown
+			errText = tr(strDetectErrorUnknown)
 		}
 		escapedError := glib.MarkupEscapeText(errText)
-		text := fmt.Sprintf(strDetectError, escapedError)
+		text := fmt.Sprintf(tr(strDetectError), escapedError)
 		markup = "<small><span foreground='red'>" + text + "</span></small>"
 
 	default:
 		// Service error or other - show error in red
 		if info.Error != "" {
-			escapedError := glib.MarkupEscapeText(info.Error)
-			text := fmt.Sprintf(strDetectError, escapedError)
+			escapedError := glib.MarkupEscapeText(info.errorText())
+			text := fmt.Sprintf(tr(strDetectError), escapedError)
 			markup = "<small><span foreground='red'>" + text + "</span></small>"
 		}
 	}
@@ -1065,7 +1078,7 @@ func (w *SettingsWindow) onRestartClicked() {
 		glib.IdleAdd(func() {
 			if err != nil {
 				if !errors.Is(err, ErrUserCanceled) {
-					w.showErrorDialog(strErrorRestartFailed, err.Error())
+					w.showErrorDialog(tr(strErrorRestartFailed), err.Error())
 				}
 			}
 			w.updateServiceStatus()
@@ -1087,18 +1100,23 @@ func (w *SettingsWindow) onApplyClicked() {
 	// Collect values from widgets
 	cfg, err := w.collectConfigValues()
 	if err != nil {
-		w.showErrorDialog(strErrorValidation, err.Error())
+		w.showErrorDialog(tr(strErrorValidation), err.Error())
 		return
 	}
 
 	// Validate values
 	if err := w.validateConfig(cfg); err != nil {
-		w.showErrorDialog(strErrorValidation, err.Error())
+		w.showErrorDialog(tr(strErrorValidation), err.Error())
 		return
 	}
 	iconMode, err := w.trayIconMode()
 	if err != nil {
-		w.showErrorDialog(strErrorValidation, err.Error())
+		w.showErrorDialog(tr(strErrorValidation), err.Error())
+		return
+	}
+	language, err := w.selectedLanguage()
+	if err != nil {
+		w.showErrorDialog(tr(strErrorValidation), err.Error())
 		return
 	}
 	daemonConfigChanged := w.loadedConfig == nil || !sameTrayConfig(cfg, w.loadedConfig)
@@ -1130,17 +1148,13 @@ func (w *SettingsWindow) onApplyClicked() {
 	}
 
 	go func() {
-		traySaveErr := SaveTrayIconMode(iconMode)
+		traySaveErr := w.saveInterfacePreferences(UIPreferences{IconMode: iconMode, Language: language})
 		if traySaveErr != nil {
 			glib.IdleAdd(func() {
-				w.showErrorDialog(strErrorTraySaveFailed, traySaveErr.Error())
+				w.showErrorDialog(tr(strErrorUISaveFailed), traySaveErr.Error())
 			})
 			return
 		}
-		if w.app != nil {
-			w.app.UpdateTrayIconMode(iconMode)
-		}
-
 		if !daemonConfigChanged {
 			glib.IdleAdd(func() {
 				w.Hide()
@@ -1160,13 +1174,13 @@ func (w *SettingsWindow) onApplyClicked() {
 			w.recordConfigSave(cfg, saveErr)
 			if saveErr != nil {
 				if !errors.Is(saveErr, ErrUserCanceled) {
-					w.showErrorDialog(strErrorSaveFailed, saveErr.Error())
+					w.showErrorDialog(tr(strErrorSaveFailed), saveErr.Error())
 				}
 				return
 			}
 			if restartErr != nil {
 				// Cancellation also leaves the saved configuration unapplied.
-				w.showWarningDialog(strWarnRestartFailed, restartErr.Error())
+				w.showWarningDialog(tr(strWarnRestartFailed), restartErr.Error())
 			}
 
 			w.updateServiceStatus()
@@ -1219,14 +1233,14 @@ func (w *SettingsWindow) collectConfigValues() (*TrayConfig, error) {
 	// Get layout switch value
 	layoutSwitchIdx := w.layoutSwitchCombo.GetActive()
 	if layoutSwitchIdx < 0 {
-		return nil, errors.New("invalid layout switch selection")
+		return nil, errors.New(tr(strInvalidLayoutSwitch))
 	}
 	// Check if custom value is selected (index beyond predefined options)
 	if layoutSwitchIdx >= len(layoutSwitchOptions) {
 		if w.customLayoutSwitch != "" {
 			cfg.LayoutSwitch = w.customLayoutSwitch
 		} else {
-			return nil, errors.New("invalid layout switch selection")
+			return nil, errors.New(tr(strInvalidLayoutSwitch))
 		}
 	} else {
 		cfg.LayoutSwitch = layoutSwitchOptions[layoutSwitchIdx].Value
@@ -1235,14 +1249,14 @@ func (w *SettingsWindow) collectConfigValues() (*TrayConfig, error) {
 	// Get convert key value
 	convertKeyIdx := w.convertKeyCombo.GetActive()
 	if convertKeyIdx < 0 {
-		return nil, errors.New("invalid convert key selection")
+		return nil, errors.New(tr(strInvalidConvertKey))
 	}
 	// Check if custom value is selected (index beyond predefined options)
 	if convertKeyIdx >= len(convertKeyOptions) {
 		if w.customConvertKey != "" {
 			cfg.ConvertKey = w.customConvertKey
 		} else {
-			return nil, errors.New("invalid convert key selection")
+			return nil, errors.New(tr(strInvalidConvertKey))
 		}
 	} else {
 		cfg.ConvertKey = convertKeyOptions[convertKeyIdx].Value
@@ -1253,13 +1267,13 @@ func (w *SettingsWindow) collectConfigValues() (*TrayConfig, error) {
 	// Get layout values
 	layout1Idx := w.layout1Combo.GetActive()
 	if layout1Idx < 0 || layout1Idx >= len(layoutOptions) {
-		return nil, errors.New("invalid layout 1 selection")
+		return nil, errors.New(tr(strInvalidLayout1))
 	}
 	cfg.Layout1 = layoutOptions[layout1Idx]
 
 	layout2Idx := w.layout2Combo.GetActive()
 	if layout2Idx < 0 || layout2Idx >= len(layoutOptions) {
-		return nil, errors.New("invalid layout 2 selection")
+		return nil, errors.New(tr(strInvalidLayout2))
 	}
 	cfg.Layout2 = layoutOptions[layout2Idx]
 
@@ -1283,28 +1297,31 @@ func (w *SettingsWindow) collectConfigValues() (*TrayConfig, error) {
 func (w *SettingsWindow) validateConfig(cfg *TrayConfig) error {
 	// Validate delay (0-100 ms)
 	if cfg.Delay < 0 || cfg.Delay > 100 {
-		return errors.New("delay between keystrokes must be between 0 and 100 ms")
+		return errors.New(tr(strInvalidDelay))
 	}
 
 	// Validate layout switch delay (0-500 ms)
 	if cfg.LayoutSwitchDelay < 0 || cfg.LayoutSwitchDelay > 500 {
-		return errors.New("delay after switching must be between 0 and 500 ms")
+		return errors.New(tr(strInvalidSwitchDelay))
 	}
 
 	// Validate layout switch key (must not be "custom" placeholder)
 	if cfg.LayoutSwitch == "custom" {
-		return errors.New("select a layout switch key or specify a key code")
+		return errors.New(tr(strMissingLayoutSwitch))
 	}
 
 	// Validate convert key (must not be "custom" placeholder)
 	if cfg.ConvertKey == "custom" {
-		return errors.New("select a conversion key or specify a key code")
+		return errors.New(tr(strMissingConvertKey))
 	}
 	convertKey, err := strconv.ParseUint(cfg.ConvertKey, 10, 16)
 	if err != nil {
-		return errors.New("conversion key must be one numeric evdev scancode")
+		return errors.New(tr(strInvalidScancode))
 	}
-	return gsconfig.ValidateConvertKey(uint16(convertKey))
+	if err := gsconfig.ValidateConvertKey(uint16(convertKey)); err != nil {
+		return fmt.Errorf(tr(strConvertModifierInvalid), convertKey)
+	}
+	return nil
 }
 
 func trayConfigWriteArgs(cfg *TrayConfig) string {
@@ -1372,19 +1389,19 @@ func (w *SettingsWindow) showAutoDetectFailDialog(info DetectionInfo) string {
 		gtk.MESSAGE_WARNING,
 		gtk.BUTTONS_NONE,
 		"%s",
-		strAutoDetectFailTitle,
+		tr(strAutoDetectFailTitle),
 	)
 
 	// Build secondary text with reason and attempts
-	reason := info.Error
+	reason := info.errorText()
 	if reason == "" {
-		reason = strAutoDetectFailDefault
+		reason = tr(strAutoDetectFailDefault)
 	}
-	secondaryText := fmt.Sprintf(strAutoDetectFailReason, reason)
+	secondaryText := fmt.Sprintf(tr(strAutoDetectFailReason), reason)
 
 	// Add attempts section if present
 	if len(info.Attempts) > 0 {
-		secondaryText += "\n\n" + strAutoDetectFailSources
+		secondaryText += "\n\n" + tr(strAutoDetectFailSources)
 		var b strings.Builder
 		for i, att := range info.Attempts {
 			if i >= 3 {
@@ -1399,9 +1416,9 @@ func (w *SettingsWindow) showAutoDetectFailDialog(info DetectionInfo) string {
 	dialog.FormatSecondaryText("%s", secondaryText)
 
 	// Add buttons: Cancel, Manual, Save
-	_, _ = dialog.AddButton(strButtonCancel, gtk.RESPONSE_CANCEL)
-	_, _ = dialog.AddButton(strAutoDetectFailManual, gtk.RESPONSE_NO)
-	_, _ = dialog.AddButton(strAutoDetectFailSave, gtk.RESPONSE_YES)
+	_, _ = dialog.AddButton(tr(strButtonCancel), gtk.RESPONSE_CANCEL)
+	_, _ = dialog.AddButton(tr(strAutoDetectFailManual), gtk.RESPONSE_NO)
+	_, _ = dialog.AddButton(tr(strAutoDetectFailSave), gtk.RESPONSE_YES)
 
 	response := dialog.Run()
 	dialog.Destroy()
@@ -1459,9 +1476,9 @@ func (w *SettingsWindow) onAutostartToggled() {
 			if err != nil {
 				if !errors.Is(err, ErrUserCanceled) {
 					if isActive {
-						w.showErrorDialog(strErrorEnableFailed, err.Error())
+						w.showErrorDialog(tr(strErrorEnableFailed), err.Error())
 					} else {
-						w.showErrorDialog(strErrorDisableFailed, err.Error())
+						w.showErrorDialog(tr(strErrorDisableFailed), err.Error())
 					}
 				}
 				// Revert checkbox to previous state
@@ -1484,7 +1501,7 @@ func (w *SettingsWindow) updateServiceStatus() {
 	if err != nil {
 		escapedErr := glib.MarkupEscapeText(err.Error())
 		markup = fmt.Sprintf("<span foreground='red'>\u25CF</span> %s (%s)",
-			strStatusUnknown, escapedErr)
+			tr(strStatusUnknown), escapedErr)
 	}
 	w.statusLabel.SetMarkup(markup)
 
@@ -1565,7 +1582,7 @@ func (w *SettingsWindow) revertLayoutSwitchCombo() {
 func (w *SettingsWindow) updateLayoutSwitchComboWithCustom(result KeyPickerResult) {
 	w.layoutSwitchCombo.RemoveAll()
 	for _, opt := range layoutSwitchOptions {
-		w.layoutSwitchCombo.AppendText(opt.Label)
+		w.layoutSwitchCombo.AppendText(tr(opt.Label))
 	}
 	customLabel := formatCustomKeyLabel(result.Value)
 	w.layoutSwitchCombo.AppendText(customLabel)
@@ -1616,7 +1633,7 @@ func (w *SettingsWindow) revertConvertKeyCombo() {
 func (w *SettingsWindow) updateConvertKeyComboWithCustom(result KeyPickerResult) {
 	w.convertKeyCombo.RemoveAll()
 	for _, opt := range convertKeyOptions {
-		w.convertKeyCombo.AppendText(opt.Label)
+		w.convertKeyCombo.AppendText(tr(opt.Label))
 	}
 	customLabel := formatCustomKeyLabel(result.Value)
 	w.convertKeyCombo.AppendText(customLabel)

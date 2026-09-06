@@ -42,7 +42,7 @@ func (w *SettingsWindow) createConversionShortcutsButton() (*gtk.MenuButton, err
 	if err != nil {
 		return nil, err
 	}
-	icon, iconErr := gtk.LabelNew(strShortcutsInfoIcon)
+	icon, iconErr := gtk.LabelNew(tr(strShortcutsInfoIcon))
 	if iconErr != nil {
 		return nil, iconErr
 	}
@@ -59,7 +59,7 @@ func (w *SettingsWindow) createConversionShortcutsButton() (*gtk.MenuButton, err
 	buttonContent.PackStart(icon, false, false, 0)
 	buttonContent.PackStart(w.shortcutsAttentionDot, false, false, 0)
 	w.conversionShortcutsButton.Add(buttonContent)
-	w.conversionShortcutsButton.SetTooltipText(strConversionShortcutsTitle)
+	w.conversionShortcutsButton.SetTooltipText(tr(strConversionShortcutsTitle))
 	w.conversionShortcutsButton.SetRelief(gtk.RELIEF_NONE)
 	w.conversionShortcutsButton.SetCanFocus(true)
 	// Reserve room for the unread dot so changing a preset never shifts the controls.
@@ -110,12 +110,12 @@ func (w *SettingsWindow) createShortcutsContent() (*gtk.Grid, error) {
 		return nil, err
 	}
 	grid.SetColumnSpacing(20)
-	grid.SetRowSpacing(9)
-	grid.SetMarginTop(16)
-	grid.SetMarginBottom(16)
+	grid.SetRowSpacing(4)
+	grid.SetMarginTop(12)
+	grid.SetMarginBottom(12)
 	grid.SetMarginStart(16)
 	grid.SetMarginEnd(16)
-	title, err := shortcutLabel("<span size='large' weight='bold'>" + glib.MarkupEscapeText(strConversionShortcutsTitle) + "</span>")
+	title, err := shortcutLabel("<span size='large' weight='bold'>" + glib.MarkupEscapeText(tr(strConversionShortcutsTitle)) + "</span>")
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func (w *SettingsWindow) createShortcutsContent() (*gtk.Grid, error) {
 		return nil, err
 	}
 	grid.Attach(w.conversionShortcutsMode, 0, 1, 2, 1)
-	for i, action := range []string{strShortcutsWord, strShortcutsLine, strShortcutsLayout, strShortcutsCase} {
+	for i, action := range []string{tr(strShortcutsWord), tr(strShortcutsLine), tr(strShortcutsLayout), tr(strShortcutsCase)} {
 		row := 3 + i
 		if i >= 2 {
 			row++
@@ -148,8 +148,8 @@ func (w *SettingsWindow) createShortcutsContent() (*gtk.Grid, error) {
 		w.conversionShortcutKeys[i] = keycap
 		grid.Attach(keycap, 1, row, 1, 1)
 	}
-	for i, section := range []string{strShortcutsTyped, strShortcutsSelected} {
-		label, labelErr := shortcutLabel("<span size='small' weight='bold' letter_spacing='700'>" + glib.MarkupEscapeText(section) + "</span>")
+	for i, section := range []string{tr(strShortcutsTyped), tr(strShortcutsSelected)} {
+		label, labelErr := shortcutLabel("<span size='small' weight='bold'>" + glib.MarkupEscapeText(section) + "</span>")
 		if labelErr != nil {
 			return nil, labelErr
 		}
@@ -159,7 +159,7 @@ func (w *SettingsWindow) createShortcutsContent() (*gtk.Grid, error) {
 		}
 		grid.Attach(label, 0, 2+3*i, 2, 1)
 	}
-	w.conversionShortcutsNote, err = shortcutLabel(glib.MarkupEscapeText(strShortcutsDoubleTap))
+	w.conversionShortcutsNote, err = shortcutLabel(glib.MarkupEscapeText(tr(strShortcutsDoubleTap)))
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +168,7 @@ func (w *SettingsWindow) createShortcutsContent() (*gtk.Grid, error) {
 		return nil, err
 	}
 	grid.Attach(w.conversionShortcutsNote, 0, 8, 2, 1)
-	undo, err := shortcutLabel("<b>↶  " + glib.MarkupEscapeText(strShortcutsUndoTitle) + "</b>\n" + glib.MarkupEscapeText(strShortcutsUndo))
+	undo, err := shortcutLabel("<b>↶  " + glib.MarkupEscapeText(tr(strShortcutsUndoTitle)) + "</b>\n" + glib.MarkupEscapeText(tr(strShortcutsUndo)))
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +202,7 @@ func (w *SettingsWindow) updateConversionShortcuts() {
 	}
 	custom := value != "0" && value != "custom"
 	w.conversionModifiersCombo.SetSensitive(custom)
-	keys := [4]string{"Shift ×2", "Shift + " + strShortcutsOtherShift + " ×2", "Ctrl + Shift ×2", "Ctrl + Shift + " + strShortcutsOtherShift + " ×2"}
+	keys := [4]string{"Shift ×2", "Shift + " + tr(strShortcutsOtherShift) + " ×2", "Ctrl + Shift ×2", "Ctrl + Shift + " + tr(strShortcutsOtherShift) + " ×2"}
 	mode := w.convertKeyCombo.GetActiveText()
 	if custom {
 		line, selection := "Shift", "Ctrl"
@@ -240,13 +240,13 @@ func (w *SettingsWindow) setShortcutsAttention(attention bool) {
 	if attention {
 		style.AddClass("shortcut-attention")
 		w.shortcutsAttentionDot.SetOpacity(1)
-		w.conversionShortcutsButton.SetTooltipText(strShortcutsChanged)
+		w.conversionShortcutsButton.SetTooltipText(tr(strShortcutsChanged))
 		w.startShortcutsFlash()
 	} else {
 		style.RemoveClass("shortcut-attention")
 		w.stopShortcutsFlash()
 		w.shortcutsAttentionDot.SetOpacity(0)
-		w.conversionShortcutsButton.SetTooltipText(strConversionShortcutsTitle)
+		w.conversionShortcutsButton.SetTooltipText(tr(strConversionShortcutsTitle))
 	}
 }
 

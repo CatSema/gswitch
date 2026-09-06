@@ -30,3 +30,5 @@ void gswitch_xembed_menu_item_set_title(GtkWidget *item, const char *title);
 void gswitch_xembed_menu_item_set_enabled(GtkWidget *item, gboolean enabled);
 
 #endif
+
+void gswitch_xembed_menu_item_set_tooltip(GtkWidget *item, const char *text);

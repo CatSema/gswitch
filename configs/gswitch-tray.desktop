@@ -1,7 +1,6 @@
 [Desktop Entry]
 Type=Application
-Name=gswitch Tray
-Name[ru]=gswitch Трей
+Name=gswitch
 Comment=Keyboard layout switcher tray icon
 Comment[ru]=Иконка переключателя раскладки клавиатуры
 Exec=gswitch-tray

@@ -159,15 +159,15 @@ func (sm *ServiceManager) command(action string) *exec.Cmd {
 func (s ServiceStatus) String() string {
 	switch s {
 	case StatusRunning:
-		return strStatusRunning
+		return tr(strStatusRunning)
 	case StatusStopped:
-		return strStatusStopped
+		return tr(strStatusStopped)
 	case StatusFailed:
-		return strStatusFailed
+		return tr(strStatusFailed)
 	case StatusNotInstalled:
-		return strStatusNotInstalled
+		return tr(strStatusNotInstalled)
 	default:
-		return strStatusUnknown
+		return tr(strStatusUnknown)
 	}
 }
 

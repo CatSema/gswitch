@@ -17,7 +17,7 @@ func forcedDetectionStatus() (DetectionInfo, bool) {
 	case "needs_config", "needs-config", "not_found", "not-found", "warning":
 		return DetectionInfo{Status: TrayStatusNeedsConfig}, true
 	case "service_error", "service-error", "service":
-		return DetectionInfo{Status: TrayStatusServiceError, Error: strTooltipServiceStopped}, true
+		return DetectionInfo{Status: TrayStatusServiceError, Error: tr(strTooltipServiceStopped)}, true
 	case "detect_error", "detect-error", "error":
 		return DetectionInfo{Status: TrayStatusDetectError, Error: "simulated auto-detection error"}, true
 	case "ok":

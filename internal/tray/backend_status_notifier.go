@@ -75,3 +75,5 @@ func (m *statusNotifierMenuItem) Enable() {
 func (m *statusNotifierMenuItem) Disable() {
 	m.item.Disable()
 }
+
+func (m *statusNotifierMenuItem) SetTooltip(text string) { m.item.SetTooltip(text) }

@@ -117,11 +117,11 @@ const (
 func keyPickerTitle(context KeyPickerContext) string {
 	switch context {
 	case KeyPickerForLayoutSwitch:
-		return strKeyPickerTitleLayoutSwitch
+		return tr(strKeyPickerTitleLayoutSwitch)
 	case KeyPickerForConvertKey:
-		return strKeyPickerTitleConvertKey
+		return tr(strKeyPickerTitleConvertKey)
 	default:
-		return strKeyPickerTitleConvertKey
+		return tr(strKeyPickerTitleConvertKey)
 	}
 }
 
@@ -129,19 +129,19 @@ func keyPickerTitle(context KeyPickerContext) string {
 func keyPickerWarningLabel(context KeyPickerContext) string {
 	switch context {
 	case KeyPickerForLayoutSwitch:
-		return strKeyPickerCurrentConvertKey
+		return tr(strKeyPickerCurrentConvertKey)
 	case KeyPickerForConvertKey:
-		return strKeyPickerCurrentLayoutSwitch
+		return tr(strKeyPickerCurrentLayoutSwitch)
 	default:
-		return strKeyPickerCurrentLayoutSwitch
+		return tr(strKeyPickerCurrentLayoutSwitch)
 	}
 }
 
 func keyPickerHint(context KeyPickerContext) string {
 	if context == KeyPickerForConvertKey {
-		return strKeyPickerHintConvert
+		return tr(strKeyPickerHintConvert)
 	}
-	return strKeyPickerHint
+	return tr(strKeyPickerHint)
 }
 
 func keySelectionValid(context KeyPickerContext, codes []uint16) bool {
@@ -161,10 +161,10 @@ func keySelectionMessage(context KeyPickerContext, codes []uint16) string {
 		return ""
 	}
 	if len(codes) > 1 {
-		return strKeyPickerCombinationRejected
+		return tr(strKeyPickerCombinationRejected)
 	}
 	if gsconfig.ValidateConvertKey(codes[0]) != nil {
-		return fmt.Sprintf(strKeyPickerModifierRejected, detect.ScancodesToKeyNames(codes))
+		return fmt.Sprintf(tr(strKeyPickerModifierRejected), detect.ScancodesToKeyNames(codes))
 	}
 	return ""
 }
@@ -210,7 +210,7 @@ func ShowKeyPickerDialog(parent *gtk.Window, context KeyPickerContext, otherKeyV
 	box.SetMarginStart(10)
 	box.SetMarginEnd(10)
 
-	instructionLabel, err := gtk.LabelNew(strKeyPickerInstruction)
+	instructionLabel, err := gtk.LabelNew(tr(strKeyPickerInstruction))
 	if err != nil {
 		return KeyPickerResult{}, false
 	}
@@ -227,7 +227,7 @@ func ShowKeyPickerDialog(parent *gtk.Window, context KeyPickerContext, otherKeyV
 	if err != nil {
 		return KeyPickerResult{}, false
 	}
-	scancodeLabel.SetMarkup("<span color='gray'>" + strKeyPickerScancode + " -</span>")
+	scancodeLabel.SetMarkup("<span color='gray'>" + tr(strKeyPickerScancode) + " -</span>")
 	box.PackStart(scancodeLabel, false, false, 0)
 
 	validationLabel, err := gtk.LabelNew("")
@@ -266,10 +266,10 @@ func ShowKeyPickerDialog(parent *gtk.Window, context KeyPickerContext, otherKeyV
 	contentArea.Add(box)
 
 	// Add buttons
-	if _, err := dialog.AddButton(strButtonCancel, gtk.RESPONSE_CANCEL); err != nil {
+	if _, err := dialog.AddButton(tr(strButtonCancel), gtk.RESPONSE_CANCEL); err != nil {
 		return KeyPickerResult{}, false
 	}
-	okButton, err := dialog.AddButton(strButtonOK, gtk.RESPONSE_OK)
+	okButton, err := dialog.AddButton(tr(strButtonOK), gtk.RESPONSE_OK)
 	if err != nil {
 		return KeyPickerResult{}, false
 	}
@@ -329,7 +329,7 @@ func ShowKeyPickerDialog(parent *gtk.Window, context KeyPickerContext, otherKeyV
 func updateKeyDisplay(keyLabel, scancodeLabel *gtk.Label, pressedKeys map[uint16]string) {
 	if len(pressedKeys) == 0 {
 		keyLabel.SetMarkup("<span size='x-large' weight='bold'>-</span>")
-		scancodeLabel.SetMarkup("<span color='gray'>" + strKeyPickerScancode + " -</span>")
+		scancodeLabel.SetMarkup("<span color='gray'>" + tr(strKeyPickerScancode) + " -</span>")
 		return
 	}
 
@@ -351,14 +351,14 @@ func updateKeyDisplay(keyLabel, scancodeLabel *gtk.Label, pressedKeys map[uint16
 	keyLabel.SetMarkup(fmt.Sprintf("<span size='x-large' weight='bold'>%s</span>",
 		strings.Join(names, " + ")))
 	scancodeLabel.SetMarkup(fmt.Sprintf("<span color='gray'>%s %s</span>",
-		strKeyPickerScancode, strings.Join(codeStrings, "+")))
+		tr(strKeyPickerScancode), strings.Join(codeStrings, "+")))
 }
 
 // formatKeyValue converts a key value to human-readable format.
 func formatKeyValue(value string) string {
 	// Known presets
 	knownValues := map[string]string{
-		"0":      "Double Shift",
+		"0":      tr(strDoubleShift),
 		"58":     "Caps Lock",
 		"29+42":  "LCtrl+LShift",
 		"56+42":  "LAlt+LShift",
@@ -383,7 +383,7 @@ func formatCustomKeyLabel(value string) string {
 	for _, part := range parts {
 		code, err := strconv.ParseUint(part, 10, 16)
 		if err != nil {
-			return fmt.Sprintf("Custom (%s)", value)
+			return fmt.Sprintf(tr(strCustomKey), value)
 		}
 		codes = append(codes, uint16(code))
 	}

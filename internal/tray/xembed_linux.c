@@ -181,3 +181,7 @@ void gswitch_xembed_menu_item_set_enabled(GtkWidget *item, gboolean enabled) {
         gtk_widget_set_sensitive(item, enabled);
     }
 }
+
+void gswitch_xembed_menu_item_set_tooltip(GtkWidget *item, const char *text) {
+    gtk_widget_set_tooltip_text(item, text);
+}

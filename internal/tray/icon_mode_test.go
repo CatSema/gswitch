@@ -52,3 +52,29 @@ func sameColor(left, right interface {
 	rr, rg, rb, ra := right.RGBA()
 	return lr == rr && lg == rg && lb == rb && la == ra
 }
+
+func TestOfferedLayoutsHaveFlags(t *testing.T) {
+	for _, code := range []string{"us", "ru", "de", "fr", "es", "it", "pt", "pl", "ua", "by", "kz", "gb"} {
+		t.Run(code, func(t *testing.T) {
+			if !HasFlagIcon(code) {
+				t.Fatal("offered layout has no embedded flag")
+			}
+			flag, err := png.Decode(bytes.NewReader(GetFlagIcon(code)))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if size := flag.Bounds().Size(); size.X != 16 || size.Y != 11 {
+				t.Fatalf("flag size = %v, want consistent 16x11 assets", size)
+			}
+			for _, mode := range []TrayIconMode{TrayIconModeFlag, TrayIconModeAppWithFlag} {
+				data := GetNormalIcon(mode, code)
+				if bytes.Equal(data, appIcon) {
+					t.Fatal("known layout fell back to application icon")
+				}
+				if _, err := png.Decode(bytes.NewReader(data)); err != nil {
+					t.Fatalf("invalid flag mode icon: %v", err)
+				}
+			}
+		})
+	}
+}

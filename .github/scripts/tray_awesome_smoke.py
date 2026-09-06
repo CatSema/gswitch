@@ -114,6 +114,7 @@ def main() -> int:
         tray_log_path = temp / "tray.log"
         awesome_env = env | {"HOME": temp_dir, "XDG_CONFIG_HOME": str(temp / "config")}
         tray_env = env | {
+            "XDG_CONFIG_HOME": str(temp / "tray-config"),
             "DBUS_SESSION_BUS_ADDRESS": f"unix:path={temp / 'no-session-bus'}",
             "G_DEBUG": "fatal-criticals",
             "XDG_CURRENT_DESKTOP": "awesome",
@@ -191,7 +192,7 @@ def main() -> int:
                 def settings_window() -> str | None:
                     tree = command_output(["xwininfo", "-root", "-tree"], env)
                     match = re.search(
-                        r'^\s+(0x[0-9a-f]+) "gswitch - Settings".*?\s+(\d+)x(\d+)[+-]',
+                        r'^\s+(0x[0-9a-f]+) "gswitch - [^\"]+".*?\s+(\d+)x(\d+)[+-]',
                         tree,
                         re.MULTILINE,
                     )

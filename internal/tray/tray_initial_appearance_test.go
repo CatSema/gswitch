@@ -46,7 +46,8 @@ func (m *recordingTrayMenuItem) Clicks() <-chan struct{} {
 	return m.clicks
 }
 
-func (*recordingTrayMenuItem) SetTitle(string) {}
+func (*recordingTrayMenuItem) SetTitle(string)   {}
+func (*recordingTrayMenuItem) SetTooltip(string) {}
 
 func (*recordingTrayMenuItem) Enable() {}
 
