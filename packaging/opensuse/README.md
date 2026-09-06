@@ -4,13 +4,21 @@ This recipe targets x86_64 in an OBS home project. It builds gswitch v0.8.0 from
 
 ## Prepare the sources
 
-You need an OBS account, a home project with an openSUSE Tumbleweed build target, and a `gswitch` package in that project. Install the source preparation tools:
+You need an OBS account and a home project with an openSUSE Tumbleweed build target. Install the source preparation tools:
 
 ```sh
 sudo zypper install osc git go obs-service-tar_scm obs-service-recompress obs-service-go_modules
 ```
 
-Configure `osc` for your account and check out the package. Replace `YOUR_LOGIN` with the OBS project owner's login:
+Configure `osc` for your account. Create a regular OBS-managed package, not an SCM-synchronized package. Replace `YOUR_LOGIN` with the OBS project owner's login:
+
+```sh
+osc meta pkg -e home:YOUR_LOGIN gswitch
+```
+
+The command opens the package XML in an editor and creates the package if it does not exist. Keep the generated package metadata, but do not add a `<scmsync>` element or a Git repository URL. The `_service` file below already fetches the upstream Git sources. If the package metadata currently contains `<scmsync>`, remove that element before continuing; otherwise `osc commit` will skip the package as SCM-managed.
+
+Check out the empty package:
 
 ```sh
 osc checkout home:YOUR_LOGIN gswitch
@@ -58,6 +66,10 @@ The remaining rpmlint warnings concern PIE for both binaries, local source archi
 ## Documentation
 
 OBS: https://openbuildservice.org/help/manuals/obs-user-guide/art-obs-bg
+
+Creating package metadata with osc: https://openbuildservice.org/help/manuals/obs-user-guide/cha-obs-osc
+
+SCM synchronization is a separate workflow: https://openbuildservice.org/help/manuals/obs-user-guide/cha-obs-scm-bridge
 
 Go dependencies: https://github.com/openSUSE/obs-service-go_modules
 
