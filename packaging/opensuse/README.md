@@ -7,7 +7,7 @@ This recipe targets x86_64 in an OBS home project. It builds the newest gswitch 
 You need an OBS account and a home project with an openSUSE Tumbleweed build target. Install the source preparation tools:
 
 ```sh
-sudo zypper install osc git go obs-service-tar_scm obs-service-set_version obs-service-recompress obs-service-go_modules
+sudo zypper install osc git go obs-service-obs_scm obs-service-tar obs-service-set_version obs-service-recompress obs-service-go_modules
 ```
 
 Configure `osc` for your account. Create a regular OBS-managed package, not an SCM-synchronized package. Replace `YOUR_LOGIN` with the OBS project owner's login:
@@ -29,23 +29,34 @@ Copy `_service`, `gswitch.spec`, and `gswitch.changes` from this repository fold
 
 ```sh
 osc service manualrun
+osc addremove
 ```
 
-The `tar_scm` service finds the newest reachable tag matching `v*`, checks out that exact tag, and derives the package version from it. `set_version` updates the spec, `recompress` creates the versioned source archive, and `go_modules` prepares dependencies in the version-neutral `vendor.tar.gz`. The local `third_party/clipboard` replacement remains in the sources and vendor directory. Source preparation needs network access. RPM compilation and Go tests use vendor without network access.
+The `obs_scm` service finds the newest reachable tag matching `v*`, checks out that exact tag, and records its version in OBS metadata. `set_version` reads that metadata and updates the spec, `tar` and `recompress` create the versioned source archive, and `go_modules` reads the generated `gswitch-*.obscpio` rather than guessing among tar archives. The local `third_party/clipboard` replacement remains in the sources and vendor directory. Source preparation needs network access. RPM compilation and Go tests use vendor without network access.
 
 ## Submit to your OBS project
 
-Add the recipe and generated archives:
+Add the recipe and generated service files:
 
 ```sh
-osc add _service gswitch.spec gswitch.changes gswitch-*.tar.gz vendor.tar.gz
+osc addremove
 osc status
 osc diff
 ```
 
 Review the changes before running `osc commit`. Do not add the `gswitch/` Git cache directory left by the service. After submission, check the server build result. To investigate a failure, provide the full build log, OBS package URL, and source revision.
 
-The `manual` mode does not start by itself when a release appears. For an update, verify that the new public release tag is reachable from the default branch, add a `.changes` entry, and run `osc service manualrun` again. No version or revision edit is needed: the services select the newest matching tag, derive the version, update the spec, and generate both archives. The checked-out tag, rather than the development branch HEAD, remains the reproducible source boundary.
+The `manual` mode does not start by itself when a release appears. For an update, verify that the new public release tag is reachable from the default branch and add a `.changes` entry. Remove the previous generated outputs before every run so wildcard inputs cannot see more than one release:
+
+```sh
+rm -f gswitch-*.obscpio gswitch-*.tar.gz gswitch.obsinfo vendor.tar.gz
+osc service manualrun
+osc addremove
+osc status
+osc diff
+```
+
+No version or revision edit is needed: the services select the newest matching tag, derive the version from OBS metadata, update the spec, and regenerate the source and vendor archives. The checked-out tag, rather than the development branch HEAD, remains the reproducible source boundary.
 
 ## Verification status
 

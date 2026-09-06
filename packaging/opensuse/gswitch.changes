@@ -6,3 +6,4 @@ Sun Sep  6 18:09:47 MSK 2026 - arumata@gmail.com
 - Include the systemd user service, udev rules, and GTK tray.
 - Automatically select the newest reachable upstream release tag and derive the package version from it.
 - Use a version-neutral vendor archive name.
+- Use OBS SCM metadata and an explicit source input so obsolete files cannot select an older release.
